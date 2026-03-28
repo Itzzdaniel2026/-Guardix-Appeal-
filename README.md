@@ -19,40 +19,26 @@ body {
   display: flex;
 }
 
-/* LEFT COMMAND CONSOLE */
-.console {
-  width: 260px;
+/* LEFT COMMAND BOX */
+.command-box {
+  width: 60px;
   height: 100vh;
-  background: rgba(15,23,42,0.85);
-  border-right: 1px solid rgba(255,255,255,0.1);
-  padding: 15px;
+  background: #1e3a8a; /* blue */
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10px;
 }
 
-.console h3 {
-  margin: 0 0 10px 0;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.console-output {
-  flex: 1;
-  background: rgba(255,255,255,0.05);
-  border-radius: 8px;
-  padding: 10px;
-  overflow-y: auto;
-  font-size: 13px;
-}
-
-.console-input {
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 8px;
+.command-input {
+  width: 90%;
+  padding: 6px;
   border: none;
-  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.2);
   color: white;
   outline: none;
+  font-size: 12px;
 }
 
 /* MAIN WRAPPER */
@@ -154,11 +140,9 @@ button:hover {
 </head>
 <body>
 
-<!-- LEFT COMMAND CONSOLE -->
-<div class="console">
-  <h3>Command Console</h3>
-  <div class="console-output" id="consoleOutput"></div>
-  <input class="console-input" id="consoleInput" placeholder="Type command...">
+<!-- LEFT COMMAND BOX -->
+<div class="command-box">
+  <input class="command-input" id="cmd" placeholder="cmd">
 </div>
 
 <!-- MAIN CONTENT -->
@@ -217,35 +201,22 @@ const errorMsg = document.getElementById("errorMsg");
 const loadingTitle = document.getElementById("loadingTitle");
 const loadingMsg = document.getElementById("loadingMsg");
 
-/* COMMAND CONSOLE */
-const consoleInput = document.getElementById("consoleInput");
-const consoleOutput = document.getElementById("consoleOutput");
-
-/* COMMAND HANDLER */
-consoleInput.addEventListener("keydown", (e) => {
+/* COMMAND BOX */
+document.getElementById("cmd").addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
-    const cmd = consoleInput.value.trim();
-    consoleInput.value = "";
-    handleCommand(cmd);
+    const cmd = e.target.value.trim();
+    e.target.value = "";
+    runCommand(cmd);
   }
 });
 
-function log(msg) {
-  consoleOutput.innerHTML += msg + "<br>";
-  consoleOutput.scrollTop = consoleOutput.scrollHeight;
-}
-
-function handleCommand(cmd) {
+/* COMMAND HANDLER */
+function runCommand(cmd) {
   if (cmd.startsWith("!cool ")) {
     const id = cmd.split(" ")[1];
-    if (!/^[0-9]{17,19}$/.test(id)) return log("Invalid ID format.");
-
     localStorage.removeItem("cooldown_" + id);
-    log("Cooldown removed for " + id);
-    return;
+    alert("Cooldown removed for " + id);
   }
-
-  log("Unknown command.");
 }
 
 /* CHECK COOLDOWN */
