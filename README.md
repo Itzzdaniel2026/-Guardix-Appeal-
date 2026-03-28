@@ -1,96 +1,225 @@
 
 
+
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Appeals</title>
+
 <style>
-body { font-family: Arial, sans-serif; background:#0f172a; color:white; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
-.container { width:400px; background:#1e293b; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); }
-input, textarea, select, button { width:100%; margin-top:10px; padding:10px; border:none; border-radius:5px; }
-button { background:#3b82f6; color:white; cursor:pointer; }
-.hidden { display:none; }
-.fade { animation: fade 0.5s ease-in-out; }
-@keyframes fade { from {opacity:0;} to {opacity:1;} }
+/* ===== GLOBAL ===== */
+body {
+  font-family: "Inter", Arial, sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* ===== CARD ===== */
+.card {
+  width: 450px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(14px);
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.45);
+  animation: fadeIn 0.5s ease-out;
+}
+
+h2 {
+  margin-top: 0;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* ===== INPUTS ===== */
+input, textarea, select, button {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  color: white;
+  font-size: 15px;
+  outline: none;
+  transition: 0.25s;
+}
+
+input:focus, textarea:focus, select:focus {
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+/* ===== CUSTOM SELECT ===== */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='20' width='20' viewBox='0 0 20 20'><path d='M5.5 7l4.5 4 4.5-4'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px;
+  padding-right: 40px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+select:hover {
+  border-color: #3b82f6;
+}
+
+/* ===== BUTTON ===== */
+button {
+  background: #3b82f6;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+button:hover {
+  background: #60a5fa;
+  transform: translateY(-2px);
+}
+
+/* ===== ERROR ===== */
+.error {
+  color: #f87171;
+  margin-top: 8px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ===== HIDDEN ===== */
+.hidden {
+  display: none;
+}
+
+/* ===== LOADING SPINNER ===== */
+.spinner {
+  border: 4px solid rgba(255,255,255,0.15);
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  margin: 20px auto;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 </style>
 </head>
 <body>
 
-<div class="container fade" id="step1">
-<h2>Enter Discord Username</h2>
-<input type="text" id="username" placeholder="Username#0000">
-<button onclick="nextStep()">Continue</button>
+<!-- STEP 1 -->
+<div class="card" id="step1">
+  <h2>Enter Your Discord ID</h2>
+  <input type="text" id="discordID" placeholder="Example: 123456789012345678">
+  <div id="errorMsg" class="error hidden">Invalid Discord ID</div>
+  <button onclick="validateID()">Continue</button>
 </div>
 
-<div class="container hidden" id="step2">
-<h2>Appeal Form</h2>
-<select id="appealType">
-<option>Mute</option>
-<option>Kick</option>
-<option>Ban</option>
-<option>Global ban</option>
-<option>Blacklist</option>
-<option>Warning</option>
-</select>
-<textarea id="reason" placeholder="Why were you given this?"></textarea>
-<textarea id="responsibility" placeholder="Do you take responsibility?"></textarea>
-<textarea id="future" placeholder="What will you do differently?"></textarea>
-<button onclick="submitAppeal()">Send</button>
+<!-- STEP 2 -->
+<div class="card hidden" id="step2">
+  <h2>Appeal Form</h2>
+
+  <select id="appealType">
+    <option>Mute</option>
+    <option>Kick</option>
+    <option>Ban</option>
+    <option>Global ban</option>
+    <option>Blacklist</option>
+    <option>Warning</option>
+  </select>
+
+  <textarea id="reason" placeholder="Why were you punished?"></textarea>
+  <textarea id="responsibility" placeholder="Do you take responsibility?"></textarea>
+  <textarea id="future" placeholder="What will you do differently?"></textarea>
+
+  <button onclick="submitAppeal()">Submit Appeal</button>
 </div>
 
-<div class="container hidden" id="loading">
-<h2>Loading...</h2>
+<!-- LOADING -->
+<div class="card hidden" id="loading">
+  <h2>Submitting...</h2>
+  <div class="spinner"></div>
 </div>
 
 <script>
-const webhook = "https://discord.com/api/webhooks/1487243550855795001/JNsSVMq38winuBfM4MjOhOLyTWzxvMSDTBNSvvUJB9MqlXn242zG6reZaSbqVC6d41oT";
+const webhook = "YOUR_WEBHOOK_HERE";
 
-function nextStep(){
-  const usernameInput = document.getElementById('username').value.trim().toLowerCase();
+/* ===== VALIDATE DISCORD ID ===== */
+function validateID() {
+  const id = document.getElementById("discordID").value.trim();
+  const error = document.getElementById("errorMsg");
 
-  if(usernameInput === "lostrbxofficial"){
-    document.getElementById('step1').innerHTML = "<h2>Hello desired it's funny how you trying to appeal.</h2>";
+  const valid = /^[0-9]{17,19}$/.test(id);
+
+  if (!valid) {
+    error.classList.remove("hidden");
     return;
   }
 
-  document.getElementById('step1').classList.add('hidden');
-  const step2 = document.getElementById('step2');
-  step2.classList.remove('hidden');
-  step2.classList.add('fade');
+  error.classList.add("hidden");
+
+  if (id === "lostrbxofficial") {
+    document.getElementById("step1").innerHTML =
+      "<h2>Hello desired, it's funny how you're trying to appeal.</h2>";
+    return;
+  }
+
+  document.getElementById("step1").classList.add("hidden");
+  document.getElementById("step2").classList.remove("hidden");
 }
 
-function containsSevere(text){
+/* ===== SEVERITY CHECK ===== */
+function containsSevere(text) {
   const keywords = ["sexual", "nuke", "harassment", "racial slur", "n word"];
   text = text.toLowerCase();
   return keywords.some(k => text.includes(k));
 }
 
-function submitAppeal(){
-  document.getElementById('step2').classList.add('hidden');
-  document.getElementById('loading').classList.remove('hidden');
+/* ===== SUBMIT APPEAL ===== */
+function submitAppeal() {
+  document.getElementById("step2").classList.add("hidden");
+  document.getElementById("loading").classList.remove("hidden");
 
-  const username = document.getElementById('username').value;
-  const type = document.getElementById('appealType').value;
-  const reason = document.getElementById('reason').value;
-  const responsibility = document.getElementById('responsibility').value;
-  const future = document.getElementById('future').value;
+  const id = document.getElementById("discordID").value;
+  const type = document.getElementById("appealType").value;
+  const reason = document.getElementById("reason").value;
+  const responsibility = document.getElementById("responsibility").value;
+  const future = document.getElementById("future").value;
 
   let severityWarning = "";
-  if(containsSevere(reason + responsibility + future)){
-    severityWarning = "⚠️ STRONGLY ADVISE NOT REVOKE - HIGH SEVERITY ⚠️\n\n";
+  if (containsSevere(reason + responsibility + future)) {
+    severityWarning = "⚠️ **HIGH SEVERITY — STRONGLY ADVISE AGAINST REVERSAL** ⚠️\n\n";
   }
 
   const payload = {
     username: "Appeals",
     avatar_url: "https://media.discordapp.net/attachments/1486852883902103722/1487244767019405403/Screenshot_2026-03-27_235014-removebg-preview.png",
-    content: severityWarning +
-      `**New Appeal**\n\n` +
-      `User: ${username}\n` +
-      `Type: ${type}\n\n` +
-      `Reason: ${reason}\n\n` +
-      `Responsibility: ${responsibility}\n\n` +
-      `Future Actions: ${future}`
+    content:
+      severityWarning +
+      `**New Appeal Submitted**\n\n` +
+      `**Discord ID:** ${id}\n` +
+      `**Type:** ${type}\n\n` +
+      `**Reason:**\n${reason}\n\n` +
+      `**Responsibility:**\n${responsibility}\n\n` +
+      `**Future Actions:**\n${future}`
   };
 
   fetch(webhook, {
@@ -99,10 +228,10 @@ function submitAppeal(){
     body: JSON.stringify(payload)
   })
   .then(() => {
-    document.getElementById('loading').innerHTML = "<h2>Appeal Sent!</h2>";
+    document.getElementById("loading").innerHTML = "<h2>Appeal Sent Successfully!</h2>";
   })
   .catch(() => {
-    document.getElementById('loading').innerHTML = "<h2>Error sending appeal.</h2>";
+    document.getElementById("loading").innerHTML = "<h2>Error sending appeal.</h2>";
   });
 }
 </script>
