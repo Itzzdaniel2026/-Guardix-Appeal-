@@ -17,34 +17,6 @@ body {
   color: white;
   overflow: hidden;
   display: flex;
-}
-
-/* LEFT COMMAND BOX */
-.command-box {
-  width: 60px;
-  height: 100vh;
-  background: #1e3a8a; /* blue */
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 10px;
-}
-
-.command-input {
-  width: 90%;
-  padding: 6px;
-  border: none;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.2);
-  color: white;
-  outline: none;
-  font-size: 12px;
-}
-
-/* MAIN WRAPPER */
-.wrapper {
-  flex: 1;
-  display: flex;
   justify-content: center;
   align-items: center;
 }
@@ -140,49 +112,39 @@ button:hover {
 </head>
 <body>
 
-<!-- LEFT COMMAND BOX -->
-<div class="command-box">
-  <input class="command-input" id="cmd" placeholder="cmd">
+<!-- STEP 1 -->
+<div class="card" id="step1">
+  <h2>Enter Discord ID</h2>
+  <input id="discordID" placeholder="123456789012345678">
+  <div id="cooldownMsg" class="info hidden"></div>
+  <div id="errorMsg" class="error hidden"></div>
+  <button onclick="validateID()">Continue</button>
 </div>
 
-<!-- MAIN CONTENT -->
-<div class="wrapper">
+<!-- STEP 2 -->
+<div class="card hidden" id="step2">
+  <h2>Appeal Form</h2>
 
-  <!-- STEP 1 -->
-  <div class="card" id="step1">
-    <h2>Enter Discord ID</h2>
-    <input id="discordID" placeholder="123456789012345678">
-    <div id="cooldownMsg" class="info hidden"></div>
-    <div id="errorMsg" class="error hidden"></div>
-    <button onclick="validateID()">Continue</button>
-  </div>
+  <select id="appealType">
+    <option>Mute</option>
+    <option>Kick</option>
+    <option>Ban</option>
+    <option>Global ban</option>
+    <option>Blacklist</option>
+    <option>Warning</option>
+  </select>
 
-  <!-- STEP 2 -->
-  <div class="card hidden" id="step2">
-    <h2>Appeal Form</h2>
+  <textarea id="reason" placeholder="Why were you punished?"></textarea>
+  <textarea id="responsibility" placeholder="Do you take responsibility?"></textarea>
+  <textarea id="future" placeholder="What will you do differently?"></textarea>
 
-    <select id="appealType">
-      <option>Mute</option>
-      <option>Kick</option>
-      <option>Ban</option>
-      <option>Global ban</option>
-      <option>Blacklist</option>
-      <option>Warning</option>
-    </select>
+  <button onclick="submitAppeal()">Submit Appeal</button>
+</div>
 
-    <textarea id="reason" placeholder="Why were you punished?"></textarea>
-    <textarea id="responsibility" placeholder="Do you take responsibility?"></textarea>
-    <textarea id="future" placeholder="What will you do differently?"></textarea>
-
-    <button onclick="submitAppeal()">Submit Appeal</button>
-  </div>
-
-  <!-- LOADING -->
-  <div class="card hidden" id="loading">
-    <h2 id="loadingTitle">Submitting...</h2>
-    <p id="loadingMsg" class="info"></p>
-  </div>
-
+<!-- LOADING -->
+<div class="card hidden" id="loading">
+  <h2 id="loadingTitle">Submitting...</h2>
+  <p id="loadingMsg" class="info"></p>
 </div>
 
 <canvas id="confetti"></canvas>
@@ -200,24 +162,6 @@ const cooldownMsg = document.getElementById("cooldownMsg");
 const errorMsg = document.getElementById("errorMsg");
 const loadingTitle = document.getElementById("loadingTitle");
 const loadingMsg = document.getElementById("loadingMsg");
-
-/* COMMAND BOX */
-document.getElementById("cmd").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    const cmd = e.target.value.trim();
-    e.target.value = "";
-    runCommand(cmd);
-  }
-});
-
-/* COMMAND HANDLER */
-function runCommand(cmd) {
-  if (cmd.startsWith("!cool ")) {
-    const id = cmd.split(" ")[1];
-    localStorage.removeItem("cooldown_" + id);
-    alert("Cooldown removed for " + id);
-  }
-}
 
 /* CHECK COOLDOWN */
 function checkCooldown(id) {
@@ -244,6 +188,14 @@ function validateID() {
   const id = document.getElementById("discordID").value.trim();
   errorMsg.classList.add("hidden");
 
+  /* DEV BYPASS */
+  if (id === "!dev/") {
+    step1.classList.add("hidden");
+    step2.classList.remove("hidden");
+    return;
+  }
+
+  /* NORMAL ID CHECK */
   if (!/^[0-9]{17,19}$/.test(id)) {
     errorMsg.textContent = "Invalid Discord ID";
     errorMsg.classList.remove("hidden");
@@ -302,7 +254,10 @@ function submitAppeal() {
     body: JSON.stringify(payload)
   })
   .then(() => {
-    localStorage.setItem("cooldown_" + id, Date.now());
+    if (id !== "!dev/") {
+      localStorage.setItem("cooldown_" + id, Date.now());
+    }
+
     loadingTitle.textContent = "Appeal Sent!";
     loadingMsg.textContent = "You cannot submit another appeal for 2 hours.";
     startConfetti();
