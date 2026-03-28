@@ -1,6 +1,5 @@
 
 
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -8,7 +7,7 @@
 <title>Appeal Portal</title>
 
 <style>
-/* ===== GLOBAL ===== */
+/* GLOBAL */
 * { box-sizing: border-box; }
 body {
   margin: 0;
@@ -18,7 +17,7 @@ body {
   overflow: hidden;
 }
 
-/* ===== BACKGROUND ===== */
+/* BACKGROUND */
 .bg {
   position: fixed;
   inset: 0;
@@ -37,7 +36,7 @@ body {
   z-index: -1;
 }
 
-/* ===== CENTER WRAPPER ===== */
+/* WRAPPER */
 .wrapper {
   display: flex;
   justify-content: center;
@@ -45,7 +44,7 @@ body {
   height: 100vh;
 }
 
-/* ===== CARD ===== */
+/* CARD */
 .card {
   width: 450px;
   background: rgba(15,23,42,0.7);
@@ -63,7 +62,7 @@ h2 {
   font-weight: 700;
 }
 
-/* ===== INPUTS ===== */
+/* INPUTS */
 input, textarea, select, button {
   width: 100%;
   margin-top: 12px;
@@ -84,7 +83,7 @@ input:focus, textarea:focus, select:focus {
 
 textarea { height: 90px; resize: none; }
 
-/* ===== SELECT ===== */
+/* SELECT */
 select {
   appearance: none;
   background-image: url("data:image/svg+xml;utf8,<svg fill='white' width='20' height='20' viewBox='0 0 20 20'><path d='M5 7l5 5 5-5'/></svg>");
@@ -93,7 +92,7 @@ select {
   padding-right: 40px;
 }
 
-/* ===== BUTTON ===== */
+/* BUTTON */
 button {
   background: #3b82f6;
   font-weight: 600;
@@ -105,7 +104,7 @@ button:hover {
   transform: translateY(-2px);
 }
 
-/* ===== MESSAGES ===== */
+/* MESSAGES */
 .error, .info {
   text-align: center;
   font-size: 14px;
@@ -116,56 +115,10 @@ button:hover {
 .error { color: #f87171; }
 .info { color: #38bdf8; }
 
-/* ===== HIDDEN ===== */
+/* HIDDEN */
 .hidden { display: none; }
 
-/* ===== MODAL ===== */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 20;
-}
-
-.modal {
-  width: 360px;
-  background: #0f172a;
-  padding: 20px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.15);
-  animation: fadeIn .25s ease-out;
-}
-
-.modal h3 {
-  margin: 0 0 10px 0;
-  font-weight: 700;
-}
-
-.modal p {
-  font-size: 14px;
-  color: #cbd5e1;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.modal button {
-  width: auto;
-  padding: 8px 14px;
-}
-
-.modal-cancel {
-  background: rgba(255,255,255,0.1);
-}
-
-/* ===== CONFETTI ===== */
+/* CONFETTI */
 #confetti {
   position: fixed;
   inset: 0;
@@ -173,7 +126,7 @@ button:hover {
   z-index: 30;
 }
 
-/* ===== ANIMATIONS ===== */
+/* ANIMATIONS */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -189,17 +142,8 @@ button:hover {
 
 <div class="wrapper">
 
-  <!-- INTRO -->
-  <div class="card" id="intro">
-    <h2>Moderation Appeal</h2>
-    <p style="text-align:center;color:#cbd5e1;margin-bottom:20px;">
-      Submit a detailed appeal. Abuse of this system may result in further action.
-    </p>
-    <button onclick="goToID()">Start</button>
-  </div>
-
   <!-- STEP 1 -->
-  <div class="card hidden" id="step1">
+  <div class="card" id="step1">
     <h2>Enter Discord ID</h2>
     <input id="discordID" placeholder="123456789012345678">
     <div id="cooldownMsg" class="info hidden"></div>
@@ -224,7 +168,7 @@ button:hover {
     <textarea id="responsibility" placeholder="Do you take responsibility?"></textarea>
     <textarea id="future" placeholder="What will you do differently?"></textarea>
 
-    <button onclick="openModal()">Submit Appeal</button>
+    <button onclick="submitAppeal()">Submit Appeal</button>
   </div>
 
   <!-- LOADING -->
@@ -235,43 +179,22 @@ button:hover {
 
 </div>
 
-<!-- MODAL -->
-<div class="modal-backdrop hidden" id="modal">
-  <div class="modal">
-    <h3>Confirm Submission</h3>
-    <p>You will not be able to submit another appeal for 2 hours.</p>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
-      <button onclick="submitAppeal()">Confirm</button>
-    </div>
-  </div>
-</div>
-
 <script>
-/* ===== CONFIG ===== */
-const webhook = "YOUR_WEBHOOK_HERE";
+/* CONFIG */
+const webhook = "https://discord.com/api/webhooks/1487243550855795001/JNsSVMq38winuBfM4MjOhOLyTWzxvMSDTBNSvvUJB9MqlXn242zG6reZaSbqVC6d41oT";
 const COOLDOWN_KEY = "appeal_last_submit";
 const COOLDOWN_HOURS = 2;
 
-/* ===== ELEMENTS ===== */
-const intro = document.getElementById("intro");
+/* ELEMENTS */
 const step1 = document.getElementById("step1");
 const step2 = document.getElementById("step2");
 const loading = document.getElementById("loading");
-const modal = document.getElementById("modal");
 const cooldownMsg = document.getElementById("cooldownMsg");
 const errorMsg = document.getElementById("errorMsg");
 const loadingTitle = document.getElementById("loadingTitle");
 const loadingMsg = document.getElementById("loadingMsg");
 
-/* ===== NAVIGATION ===== */
-function goToID() {
-  intro.classList.add("hidden");
-  step1.classList.remove("hidden");
-  checkCooldown();
-}
-
-/* ===== COOLDOWN CHECK ===== */
+/* COOLDOWN CHECK */
 function checkCooldown() {
   const last = localStorage.getItem(COOLDOWN_KEY);
   if (!last) return cooldownMsg.classList.add("hidden");
@@ -288,12 +211,11 @@ function checkCooldown() {
   }
 }
 
-/* ===== VALIDATE ID ===== */
+/* VALIDATE ID */
 function validateID() {
   const id = document.getElementById("discordID").value.trim();
   errorMsg.classList.add("hidden");
 
-  // Check cooldown
   const last = localStorage.getItem(COOLDOWN_KEY);
   if (last) {
     const diff = Date.now() - Number(last);
@@ -314,11 +236,7 @@ function validateID() {
   step2.classList.remove("hidden");
 }
 
-/* ===== MODAL ===== */
-function openModal() { modal.classList.remove("hidden"); }
-function closeModal() { modal.classList.add("hidden"); }
-
-/* ===== EMBED COLORS ===== */
+/* EMBED COLOR */
 function embedColor(type) {
   return {
     "mute": 0x22c55e,
@@ -330,11 +248,13 @@ function embedColor(type) {
   }[type.toLowerCase()] || 0x3b82f6;
 }
 
-/* ===== SUBMIT APPEAL ===== */
+/* SUBMIT APPEAL */
 function submitAppeal() {
-  closeModal();
   step2.classList.add("hidden");
   loading.classList.remove("hidden");
+
+  loadingTitle.textContent = "Submitting...";
+  loadingMsg.textContent = "";
 
   const id = document.getElementById("discordID").value;
   const type = document.getElementById("appealType").value;
@@ -373,7 +293,7 @@ function submitAppeal() {
   });
 }
 
-/* ===== CONFETTI ===== */
+/* CONFETTI */
 const canvas = document.getElementById("confetti");
 const ctx = canvas.getContext("2d");
 canvas.width = innerWidth;
