@@ -1,5 +1,6 @@
 
 
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -15,33 +16,51 @@ body {
   background: #020617;
   color: white;
   overflow: hidden;
+  display: flex;
 }
 
-/* BACKGROUND */
-.bg {
-  position: fixed;
-  inset: 0;
-  background-image: url("https://images.pexels.com/photos/7130555/pexels-photo-7130555.jpeg");
-  background-size: cover;
-  background-position: center;
-  filter: blur(18px) brightness(0.35);
-  transform: scale(1.1);
-  z-index: -2;
+/* LEFT COMMAND CONSOLE */
+.console {
+  width: 260px;
+  height: 100vh;
+  background: rgba(15,23,42,0.85);
+  border-right: 1px solid rgba(255,255,255,0.1);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
 }
 
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(circle at top, rgba(59,130,246,0.25), transparent 60%);
-  z-index: -1;
+.console h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: 700;
 }
 
-/* WRAPPER */
+.console-output {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 10px;
+  overflow-y: auto;
+  font-size: 13px;
+}
+
+.console-input {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  outline: none;
+}
+
+/* MAIN WRAPPER */
 .wrapper {
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
 }
 
 /* CARD */
@@ -135,11 +154,14 @@ button:hover {
 </head>
 <body>
 
-<div class="bg" id="bg"></div>
-<div class="overlay"></div>
+<!-- LEFT COMMAND CONSOLE -->
+<div class="console">
+  <h3>Command Console</h3>
+  <div class="console-output" id="consoleOutput"></div>
+  <input class="console-input" id="consoleInput" placeholder="Type command...">
+</div>
 
-<canvas id="confetti"></canvas>
-
+<!-- MAIN CONTENT -->
 <div class="wrapper">
 
   <!-- STEP 1 -->
@@ -179,10 +201,11 @@ button:hover {
 
 </div>
 
+<canvas id="confetti"></canvas>
+
 <script>
 /* CONFIG */
 const webhook = "https://discord.com/api/webhooks/1487243550855795001/JNsSVMq38winuBfM4MjOhOLyTWzxvMSDTBNSvvUJB9MqlXn242zG6reZaSbqVC6d41oT";
-const COOLDOWN_KEY = "appeal_last_submit";
 const COOLDOWN_HOURS = 2;
 
 /* ELEMENTS */
@@ -194,10 +217,42 @@ const errorMsg = document.getElementById("errorMsg");
 const loadingTitle = document.getElementById("loadingTitle");
 const loadingMsg = document.getElementById("loadingMsg");
 
-/* COOLDOWN CHECK */
-function checkCooldown() {
-  const last = localStorage.getItem(COOLDOWN_KEY);
-  if (!last) return cooldownMsg.classList.add("hidden");
+/* COMMAND CONSOLE */
+const consoleInput = document.getElementById("consoleInput");
+const consoleOutput = document.getElementById("consoleOutput");
+
+/* COMMAND HANDLER */
+consoleInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    const cmd = consoleInput.value.trim();
+    consoleInput.value = "";
+    handleCommand(cmd);
+  }
+});
+
+function log(msg) {
+  consoleOutput.innerHTML += msg + "<br>";
+  consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
+
+function handleCommand(cmd) {
+  if (cmd.startsWith("!cool ")) {
+    const id = cmd.split(" ")[1];
+    if (!/^[0-9]{17,19}$/.test(id)) return log("Invalid ID format.");
+
+    localStorage.removeItem("cooldown_" + id);
+    log("Cooldown removed for " + id);
+    return;
+  }
+
+  log("Unknown command.");
+}
+
+/* CHECK COOLDOWN */
+function checkCooldown(id) {
+  const key = "cooldown_" + id;
+  const last = localStorage.getItem(key);
+  if (!last) return false;
 
   const diff = Date.now() - Number(last);
   const hours = diff / (1000 * 60 * 60);
@@ -206,9 +261,11 @@ function checkCooldown() {
     const mins = Math.ceil((COOLDOWN_HOURS - hours) * 60);
     cooldownMsg.textContent = `Cooldown active: ${mins} minutes remaining.`;
     cooldownMsg.classList.remove("hidden");
-  } else {
-    cooldownMsg.classList.add("hidden");
+    return true;
   }
+
+  cooldownMsg.classList.add("hidden");
+  return false;
 }
 
 /* VALIDATE ID */
@@ -216,21 +273,13 @@ function validateID() {
   const id = document.getElementById("discordID").value.trim();
   errorMsg.classList.add("hidden");
 
-  const last = localStorage.getItem(COOLDOWN_KEY);
-  if (last) {
-    const diff = Date.now() - Number(last);
-    const hours = diff / (1000 * 60 * 60);
-    if (hours < COOLDOWN_HOURS) {
-      checkCooldown();
-      return;
-    }
-  }
-
   if (!/^[0-9]{17,19}$/.test(id)) {
     errorMsg.textContent = "Invalid Discord ID";
     errorMsg.classList.remove("hidden");
     return;
   }
+
+  if (checkCooldown(id)) return;
 
   step1.classList.add("hidden");
   step2.classList.remove("hidden");
@@ -282,7 +331,7 @@ function submitAppeal() {
     body: JSON.stringify(payload)
   })
   .then(() => {
-    localStorage.setItem(COOLDOWN_KEY, Date.now());
+    localStorage.setItem("cooldown_" + id, Date.now());
     loadingTitle.textContent = "Appeal Sent!";
     loadingMsg.textContent = "You cannot submit another appeal for 2 hours.";
     startConfetti();
